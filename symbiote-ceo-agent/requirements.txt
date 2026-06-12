@@ -1,0 +1,9 @@
+crewai
+crewai-tools
+ollama
+n8n-client
+chromadb
+python-dotenv
+fastapi
+uvicorn
+requests

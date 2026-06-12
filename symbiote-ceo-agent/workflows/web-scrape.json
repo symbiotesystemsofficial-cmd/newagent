@@ -1,0 +1,73 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "id": "f1g2h3i4-j5k6-7l8m-9n0o-1p2q3r4s5t6u",
+      "webhookPath": "web-scrape",
+      "httpMethod": "POST",
+      "options": {
+        "rawBody": "true"
+      }
+    },
+    {
+      "parameters": {
+        "url": "{{ $(\'Webhook\').data.body.url }}",
+        "returnFullDocument": true,
+        "options": {
+          "ignoreSslIssues": true
+        }
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "v1w2x3y4-z5a6-7b8c-9d0e-1f2g3h4i5j6k"
+    },
+    {
+      "parameters": {
+        "mode": "cssSelector",
+        "selector": "{{ $(\'Webhook\').data.body.selector || \"body\" }}",
+        "attribute": "innerText",
+        "jsonProperty": "scrapedData"
+      },
+      "name": "Extract HTML",
+      "type": "n8n-nodes-base.extractHtml",
+      "typeVersion": 1,
+      "id": "l1m2n3o4-p5q6-7r8s-9t0u-1v2w3x4y5z6a"
+    },
+    {
+      "parameters": {
+        "value": "{{ $(\'Extract HTML\').item.json.scrapedData }}"
+      },
+      "name": "Return Scraped Data",
+      "type": "n8n-nodes-base.return",
+      "typeVersion": 1,
+      "id": "b1c2d3e4-f5g6-7h8i-9j0k-1l2m3n4o5p6q"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "HTTP Request", "type": "main" }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          { "node": "Extract HTML", "type": "main" }
+        ]
+      ]
+    },
+    "Extract HTML": {
+      "main": [
+        [
+          { "node": "Return Scraped Data", "type": "main" }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    command: serve
+
+  n8n:
+    container_name: n8n
+    image: n8n.io/n8n
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://${N8N_HOST:-localhost}:5678/
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USERNAME:-n8nuser}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-n8npassword}
+      - N8N_EDITOR_BASE_URL=http://${N8N_HOST:-localhost}:5678/
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-default_encryption_key_please_change_me}
+    restart: unless-stopped
+
+  symbiote-ceo-agent:
+    container_name: symbiote-ceo-agent
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - CHROMADB_PATH=/app/chroma_db
+      # Add other environment variables from .env.example as needed
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./config:/app/config
+      - ./workflows:/app/workflows
+    depends_on:
+      - ollama
+      - n8n
+    restart: on-failure
+    # command: python main.py # This will be run by n8n scheduler or manually
+
+volumes:
+  ollama_data:
+  n8n_data:

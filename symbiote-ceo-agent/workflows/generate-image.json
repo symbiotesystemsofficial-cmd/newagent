@@ -1,0 +1,84 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "id": "e1f2g3h4-i5j6-7k8l-9m0n-1o2p3q4r5s6t",
+      "webhookPath": "generate-image",
+      "httpMethod": "POST",
+      "options": {
+        "rawBody": "true"
+      }
+    },
+    {
+      "parameters": {
+        "model": "stability-ai/stable-diffusion-xl",
+        "text": "{{ $(\'Webhook\').data.body.prompt }}",
+        "style": "{{ $(\'Webhook\').data.body.style || \'dark, high-contrast, geometric, classified/executive style\' }}",
+        "outputFormat": "png"
+      },
+      "name": "Generate Image with AI",
+      "type": "n8n-nodes-base.aiImageGenerator",
+      "typeVersion": 1,
+      "id": "u1v2w3x4-y5z6-7a8b-9c0d-1e2f3g4h5i6j",
+      "credentials": {
+        "aiImageGeneratorApi": {
+          "id": "your-ai-image-generator-credential-id",
+          "name": "AI Image Generator API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "binaryPropertyName": "data",
+        "fileName": "{{ $(\'Webhook\').data.body.prompt.substring(0, 20).replace(/[^a-zA-Z0-9]/g, \'_\') }}.png",
+        "folder": "symbiote-images"
+      },
+      "name": "Upload to S3",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "id": "k1l2m3n4-o5p6-7q8r-9s0t-1u2v3w4x5y6z",
+      "credentials": {
+        "awsS3Api": {
+          "id": "your-aws-s3-credential-id",
+          "name": "AWS S3 Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "value": "{{ $(\'Upload to S3\').data.url }}"
+      },
+      "name": "Return Image URL",
+      "type": "n8n-nodes-base.return",
+      "typeVersion": 1,
+      "id": "a1b2c3d4-e5f6-7g8h-9i0j-1k2l3m4n5o6p"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Generate Image with AI", "type": "main" }
+        ]
+      ]
+    },
+    "Generate Image with AI": {
+      "main": [
+        [
+          { "node": "Upload to S3", "type": "main" }
+        ]
+      ]
+    },
+    "Upload to S3": {
+      "main": [
+        [
+          { "node": "Return Image URL", "type": "main" }
+        ]
+      ]
+    }
+  }
+}

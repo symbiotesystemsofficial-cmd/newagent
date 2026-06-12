@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "id": "c21b3d2b-1a2e-4f3a-8b0a-9c1d2e3f4a5b",
+      "webhookPath": "send-email",
+      "httpMethod": "POST",
+      "options": {
+        "rawBody": "true"
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $('Webhook').data.body.fromEmail || 'ceo@symbiotesystems.com' }}",
+        "toEmail": "{{ $('Webhook').data.body.recipient }}",
+        "subject": "{{ $('Webhook').data.body.subject }}",
+        "text": "{{ $('Webhook').data.body.body }}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "id": "d4e5f6g7-8h9i-0j1k-2l3m-4n5o6p7q8r9s",
+      "credentials": {
+        "emailSmtp": {
+          "id": "your-smtp-credential-id",
+          "name": "SMTP Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Send Email", "type": "main" }
+        ]
+      ]
+    }
+  }
+}

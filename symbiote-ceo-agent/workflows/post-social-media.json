@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "id": "a1b2c3d4-e5f6-7g8h-9i0j-1k2l3m4n5o6p",
+      "webhookPath": "post-social-media",
+      "httpMethod": "POST",
+      "options": {
+        "rawBody": "true"
+      }
+    },
+    {
+      "parameters": {
+        "platform": "{{ $(\'Webhook\').data.body.platform }}",
+        "content": "{{ $(\'Webhook\').data.body.content }}",
+        "imageUrl": "{{ $(\'Webhook\').data.body.image_url || \'\' }}"
+      },
+      "name": "Post to Social Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "id": "q1r2s3t4-u5v6-7w8x-9y0z-1a2b3c4d5e6f",
+      "url": "=IF($(\'Webhook\').data.body.platform == \'instagram\', \'https://graph.facebook.com/v18.0/me/media\', IF($(\'Webhook\').data.body.platform == \'facebook\', \'https://graph.facebook.com/v18.0/me/feed\', IF($(\'Webhook\').data.body.platform == \'x\', \'https://api.twitter.com/2/tweets\', \'\')))",
+      "method": "POST",
+      "sendBody": "true",
+      "jsonBody": "true",
+      "bodyParameters": [
+        {
+          "name": "message",
+          "value": "{{ $(\'Webhook\').data.body.content }}"
+        },
+        {
+          "name": "media_url",
+          "value": "{{ $(\'Webhook\').data.body.image_url }}"
+        }
+      ],
+      "options": {
+        "authentication": "predefined",
+        "predefinedAuth": {
+          "authId": "your-social-media-credential-id",
+          "authType": "httpHeader"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Post to Social Media", "type": "main" }
+        ]
+      ]
+    }
+  }
+}
